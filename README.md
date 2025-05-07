@@ -72,12 +72,12 @@ ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations
 
 2. Set Boot Order to CD-ROM:
 ```bash
-ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e boot_setorder=1 -e boot_device=Cd
+ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e boot_setorder=1 -e boot_device=cd
 ```
 
 3. Set Boot Order to HDD:
 ```bash
-ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e boot_setorder=1 -e boot_device=Hdd
+ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e boot_setorder=1 -e boot_device=hdd
 ```
 
 4. Reboot VM:
@@ -98,6 +98,8 @@ The proxy implements the following Redfish API endpoints:
 - `/redfish/v1/Managers/1` - Manager instance
 - `/redfish/v1/Managers/1/VirtualMedia` - Virtual media collection
 - `/redfish/v1/Managers/1/VirtualMedia/CD` - CD-ROM instance
+- `/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.EjectMedia` - Eject the CD-ROM
+- `/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.InsertMedia` - Mount an ISO
 
 ## Authentication
 
@@ -112,8 +114,8 @@ enough permissions in the vSphere instance.
 
 ## Limitations
 
-1. BootSourceOverrideEnabled only accepts "Continuous" value
-2. BootSourceOverrideSupported only allows "Hdd" and "Cd"
+1. BootSourceOverrideEnabled only accepts "Continuous" value due to vSphere constrains
+2. BootSourceOverrideSupported only allows "HDD" and "CD"
 3. Authentication requires vCenter credentials
 4. SSL certificates must be in the `certs/` directory
 
@@ -138,7 +140,7 @@ enough permissions in the vSphere instance.
 
 ### Logs
 
-The proxy logs all requests and responses to the console for debugging purposes.
+The proxy logs all requests and responses to the console for debugging purposes. Not suitable for production environments.
 
 ## License
 
