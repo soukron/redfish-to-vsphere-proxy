@@ -19,7 +19,7 @@ def create_flask_app(global_config, vm_config):
     app.url_map.strict_slashes = False
     vm_id = vm_config['vmId']
 
-    def create_client():
+    def get_auth_credentials():
         auth = request.headers.get("Authorization")
         if not auth or not auth.lower().startswith("basic "):
             raise ValueError("Missing or invalid Authorization header")
@@ -30,6 +30,10 @@ def create_flask_app(global_config, vm_config):
         except Exception:
             raise ValueError("Invalid Basic Auth format")
 
+        return username, password
+
+    def create_client():
+        username, password = get_auth_credentials()
         session = requests.Session()
         session.verify = False
 
@@ -39,7 +43,18 @@ def create_flask_app(global_config, vm_config):
             password=password,
             session=session
         )
-
+    
+    def create_pyvmomi_client():
+        username, password = get_auth_credentials()
+        context = pyvmomi_ssl._create_unverified_context()
+        si = SmartConnect(
+            host=global_config['host'],
+            user=username,
+            pwd=password,
+            sslContext=context
+        )
+        return si
+    
     def get_vm_power_state():
         try:
             client = create_client()
@@ -70,19 +85,7 @@ def create_flask_app(global_config, vm_config):
             raise ValueError("Invalid action")
 
     def auto_answer_vm_question():
-        # Obtener credenciales del contexto actual
-        auth = request.headers.get("Authorization")
-        if not auth or not auth.lower().startswith("basic "):
-            print("Missing or invalid Authorization header")
-            return
-
-        try:
-            auth_decoded = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
-            username, password = auth_decoded.split(":", 1)
-        except Exception as e:
-            print(f"Invalid Basic Auth format: {e}")
-            return
-
+        username, password = get_auth_credentials()
         def _answer(host, username, password):
             time.sleep(2)
             try:
@@ -171,22 +174,7 @@ def create_flask_app(global_config, vm_config):
             current_boot_device = "None"
             
             try:
-                auth = request.headers.get("Authorization")
-                if not auth or not auth.lower().startswith("basic "):
-                    raise ValueError("Missing or invalid Authorization header")
-                try:
-                    auth_decoded = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
-                    username, password = auth_decoded.split(":", 1)
-                except Exception:
-                    raise ValueError("Invalid Basic Auth format")
-
-                context = pyvmomi_ssl._create_unverified_context()
-                si = SmartConnect(
-                    host=global_config['host'],
-                    user=username,
-                    pwd=password,
-                    sslContext=context
-                )
+                si = create_pyvmomi_client()
                 content = si.RetrieveContent()
                 vm = None
                 for dc in content.rootFolder.childEntity:
@@ -402,24 +390,7 @@ def create_flask_app(global_config, vm_config):
                     'message': 'Only BootSourceOverrideEnabled=Continuous is supported'
                 }}), 400
 
-            auth = request.headers.get("Authorization")
-            if not auth or not auth.lower().startswith("basic "):
-                raise ValueError("Missing or invalid Authorization header")
-            try:
-                import base64
-                auth_decoded = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
-                username, password = auth_decoded.split(":", 1)
-            except Exception:
-                raise ValueError("Invalid Basic Auth format")
-
-            context = pyvmomi_ssl._create_unverified_context()
-            si = SmartConnect(
-                host=global_config['host'],
-                user=username,
-                pwd=password,
-                sslContext=context
-            )
-
+            si = create_pyvmomi_client()
             content = si.RetrieveContent()
             vm = None
             for dc in content.rootFolder.childEntity:
