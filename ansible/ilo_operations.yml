@@ -1,0 +1,96 @@
+---
+- name: Manage server power operations via Redfish
+  hosts: all
+  gather_facts: false
+  connection: local
+  vars:
+    redfish_baseuri: "{{ redfish_hostname }}:{{ redfish_port }}"
+    boot_iso_url: "[esx1-datastore] iso/ocp4-agent.x86_64.iso"
+    boot_device: "Cd"
+
+  tasks:
+    - name: Power off server
+      community.general.redfish_command:
+        category: Systems
+        command: PowerForceOff
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+      register: result
+      when: power_off | default(false) | bool
+
+    - name: Power on server
+      community.general.redfish_command:
+        category: Systems
+        command: PowerOn
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+      register: result
+      when: power_on | default(false) | bool
+
+    - name: Reboot server
+      community.general.redfish_command:
+        category: Systems
+        command: PowerReboot
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+      register: result
+      when: power_reboot | default(false) | bool
+
+    - name: Insert Virtual Media
+      community.general.redfish_command:
+        category: Manager
+        command: VirtualMediaInsert
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+        virtual_media:
+          image_url: "{{ boot_iso_url }}"
+          media_types:
+            - CD
+        resource_id: 1
+      register: result
+      when: virtualmedia_insert | default(false) | bool
+
+    - name: Eject Virtual Media
+      community.general.redfish_command:
+        category: Manager
+        command: VirtualMediaEject
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+        virtual_media:
+          image_url: "{{ boot_iso_url }}"
+          media_types:
+            - CD
+        resource_id: 1
+        timeout: 90
+      register: result
+      when: virtualmedia_eject | default(false) | bool
+
+    - name: Get Virtual Media information
+      community.general.redfish_info:
+        category: Manager
+        command: GetVirtualMedia
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+      when: virtualmedia_get | default(false) | bool
+
+    - name: Set boot source override
+      community.general.redfish_command:
+        category: Systems
+        command: EnableContinuousBootOverride
+        bootdevice: "{{ boot_device }}"
+        baseuri: "{{ redfish_baseuri }}"
+        username: "{{ redfish_username }}"
+        password: "{{ redfish_password }}"
+        resource_id: 1
+      when: boot_setorder | default(false) | bool
+
+    - name: Display operation results
+      debug:
+        msg: "{{ result }}"
+      when: result is defined

@@ -1,0 +1,5 @@
+flask>=2.0.0
+pyvmomi>=8.0.0
+requests>=2.25.0
+urllib3>=1.26.0
+vmware-api-client>=1.0.0

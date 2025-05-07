@@ -1,0 +1,19 @@
+---
+all:
+  vars:
+    redfish_hostname: "localhost"
+    redfish_port: ""
+    redfish_username: "fromVault"
+    redfish_password: "fromVault"
+
+  hosts:
+    node00.example.local:
+      redfish_port: "3000"
+    node01.example.local:
+      redfish_port: "3001"
+    node02.example.local:
+      redfish_port: "3002"
+    node03.example.local:
+      redfish_port: "3003"
+    node04.example.local:
+      redfish_port: "3004"
