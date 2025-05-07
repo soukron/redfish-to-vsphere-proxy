@@ -70,14 +70,27 @@ def create_flask_app(global_config, vm_config):
             raise ValueError("Invalid action")
 
     def auto_answer_vm_question():
-        def _answer():
+        # Obtener credenciales del contexto actual
+        auth = request.headers.get("Authorization")
+        if not auth or not auth.lower().startswith("basic "):
+            print("Missing or invalid Authorization header")
+            return
+
+        try:
+            auth_decoded = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
+            username, password = auth_decoded.split(":", 1)
+        except Exception as e:
+            print(f"Invalid Basic Auth format: {e}")
+            return
+
+        def _answer(host, username, password):
             time.sleep(2)
             try:
                 context = pyvmomi_ssl._create_unverified_context()
                 si = SmartConnect(
-                    host=global_config['host'],
-                    user=global_config['username'],
-                    pwd=global_config['password'],
+                    host=host,
+                    user=username,
+                    pwd=password,
                     sslContext=context
                 )
                 content = si.RetrieveContent()
@@ -111,7 +124,7 @@ def create_flask_app(global_config, vm_config):
                 except:
                     pass
 
-        Thread(target=_answer).start()
+        Thread(target=_answer, args=(global_config['host'], username, password)).start()
             
     @app.before_request
     def log_request():
@@ -155,6 +168,48 @@ def create_flask_app(global_config, vm_config):
     def redfish_system():
         try:
             power_state = get_vm_power_state()
+            current_boot_device = "None"
+            
+            try:
+                auth = request.headers.get("Authorization")
+                if not auth or not auth.lower().startswith("basic "):
+                    raise ValueError("Missing or invalid Authorization header")
+                try:
+                    auth_decoded = base64.b64decode(auth.split(" ")[1]).decode("utf-8")
+                    username, password = auth_decoded.split(":", 1)
+                except Exception:
+                    raise ValueError("Invalid Basic Auth format")
+
+                context = pyvmomi_ssl._create_unverified_context()
+                si = SmartConnect(
+                    host=global_config['host'],
+                    user=username,
+                    pwd=password,
+                    sslContext=context
+                )
+                content = si.RetrieveContent()
+                vm = None
+                for dc in content.rootFolder.childEntity:
+                    for entity in dc.vmFolder.childEntity:
+                        if isinstance(entity, vim.VirtualMachine) and entity._moId == vm_id:
+                            vm = entity
+                            break
+
+                if vm and vm.config.bootOptions and vm.config.bootOptions.bootOrder:
+                    boot_device = vm.config.bootOptions.bootOrder[0]
+                    if isinstance(boot_device, vim.vm.BootOptions.BootableCdromDevice):
+                        current_boot_device = "Cd"
+                    elif isinstance(boot_device, vim.vm.BootOptions.BootableDiskDevice):
+                        current_boot_device = "Hdd"
+
+            except Exception as e:
+                print(f"Error getting boot device: {str(e)}")
+            finally:
+                try:
+                    Disconnect(si)
+                except:
+                    pass
+
             return jsonify({
                 "@odata.context": "/redfish/v1/$metadata#ComputerSystem.ComputerSystem",
                 "@odata.id": "/redfish/v1/Systems/1",
@@ -164,7 +219,7 @@ def create_flask_app(global_config, vm_config):
                 "SystemType": "Physical",
                 "PowerState": power_state,
                 "Boot": {
-                    "BootSourceOverrideTarget": "None",
+                    "BootSourceOverrideTarget": current_boot_device,
                     "BootSourceOverrideEnabled": "Continuous",
                     "BootSourceOverrideMode": "Legacy",
                     "BootSourceOverrideSupported": ["Hdd", "Cd"]
