@@ -1,4 +1,4 @@
-# iLO to vSphere Proxy
+# Redfish to vSphere Proxy
 
 This application provides a proxy service that translates iLO Redfish API calls to vSphere API calls. It allows managing vSphere VMs through a minimal set of Redfish API calls.
 
