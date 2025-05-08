@@ -32,12 +32,12 @@ pip install -r requirements.txt
 4. Generate SSL certificates:
 ```bash
 mkdir -p certs
-openssl req -x509 -newkey rsa:4096 -nodes -out certs/cert.pem -keyout certs/key.pem -days 365
+openssl req -x509 -newkey rsa:4096 -nodes -out certs/server.crt -keyout certs/server.key -days 365
 ```
 
 ## Configuration
 
-Edit the `config.py` file to configure your vSphere environment:
+Edit the `config.py` file to configure your vSphere environment, this is: set the vSphere hostname and map local ports with each of your virtual machines.
 
 ```python
 vsphere = {
@@ -51,41 +51,43 @@ vsphere = {
 
 ## Usage
 
-### Direct API Usage
-
 Run the application:
 
 ```bash
 python main.py
 ```
 
-The proxy will start a separate process for each VM configured in `config.py`, each listening on its specified port.
+The proxy will start a separate process for each VM configured in `config.py`, each listening on its specified port. From this moment, you can interact with the server as if you would be interacting with an iLO or any other Redfish compatible management interface.
 
-### Ansible Integration
-
-The proxy can be managed using Ansible playbooks. Here are some common operations:
+As an example, an Ansible playbook is provided with some of the most common operations, using the `community.general.redfish_command` module:
 
 1. Power On VM:
 ```bash
-ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e power_on=1
+ansible-playbook ilo_operations.yml -i inventory \
+                 -e @vault.yaml --ask-vault-password \
+                 -e power_on=1
 ```
 
 2. Set Boot Order to CD-ROM:
 ```bash
-ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e boot_setorder=1 -e boot_device=cd
+ansible-playbook ilo_operations.yml -i inventory \
+                 -e @vault.yaml --ask-vault-password \
+                 -e boot_setorder=1 -e boot_device=cd
 ```
 
 3. Set Boot Order to HDD:
 ```bash
-ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e boot_setorder=1 -e boot_device=hdd
+ansible-playbook ilo_operations.yml -i inventory \
+                 -e @vault.yaml --ask-vault-password \
+                 -e boot_setorder=1 -e boot_device=hdd
 ```
 
 4. Reboot VM:
 ```bash
-ansible-playbook -i inventory -e @vault.yaml --ask-vault-password ilo_operations.yml -e power_reboot=1
+ansible-playbook ilo_operations.yml -i inventory \
+                 -e @vault.yaml --ask-vault-password \
+                 -e power_reboot=1
 ```
-
-Note: The vault file should contain sensitive information like credentials and API endpoints.
 
 ## API Endpoints
 
@@ -109,8 +111,8 @@ The proxy uses Basic Authentication. Include the Authorization header in your re
 Authorization: Basic <base64-encoded-credentials>
 ```
 
-This credentials will be sent to vSphere API to authenticate so make sure the user has 
-enough permissions in the vSphere instance.
+These credentials will be sent to vSphere API to authenticate so make sure the user has 
+enough permissions in the vSphere instance to make the changes.
 
 ## Limitations
 
@@ -122,8 +124,7 @@ enough permissions in the vSphere instance.
 ## Security
 
 - SSL certificates should have appropriate permissions (600 for key.pem)
-- vCenter credentials are transmitted with each request
-- HTTPS is recommended for production use
+- vCenter credentials are transmitted with each request. They're not cached in any way.
 
 ## Troubleshooting
 
@@ -141,6 +142,14 @@ enough permissions in the vSphere instance.
 ### Logs
 
 The proxy logs all requests and responses to the console for debugging purposes. Not suitable for production environments.
+
+## TODO
+
+- Refactor the code to split it in different files
+- Implement in some way the `SetOneTimeBoot` function
+- Implement properly `ForceOff` and `GracefulShutdown`
+- Implement properly `ForceRestart`, `GracefulRestart` and `PowerReboot`
+
 
 ## License
 
