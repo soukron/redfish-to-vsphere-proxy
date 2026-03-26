@@ -15,7 +15,7 @@ This application provides a proxy service that translates iLO Redfish API calls 
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd ilo-to-vsphere-python
+cd redfish-to-vsphere-python
 ```
 
 2. Create a virtual environment and activate it:
@@ -27,6 +27,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 3. Install dependencies:
 ```bash
 pip install -r requirements.txt
+pip install git+https://github.com/vmware/vsphere-automation-sdk-python.git
 ```
 
 4. Generate SSL certificates:
