@@ -99,9 +99,9 @@ The proxy implements the following Redfish API endpoints:
 - `/redfish/v1/Managers` - Manager collection
 - `/redfish/v1/Managers/1` - Manager instance
 - `/redfish/v1/Managers/1/VirtualMedia` - Virtual media collection
-- `/redfish/v1/Managers/1/VirtualMedia/CD` - CD-ROM instance
-- `/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.EjectMedia` - Eject the CD-ROM
-- `/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.InsertMedia` - Mount an ISO
+- `/redfish/v1/Managers/1/VirtualMedia/Cd` - CD-ROM instance
+- `/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.EjectMedia` - Eject the CD-ROM
+- `/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.InsertMedia` - Mount an ISO
 
 ## Authentication
 

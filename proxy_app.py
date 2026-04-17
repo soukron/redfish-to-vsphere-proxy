@@ -283,10 +283,10 @@ def create_flask_app(global_config, vm_config):
             '@odata.type': '#VirtualMediaCollection.VirtualMediaCollection',
             'Name': 'Virtual Media Collection',
             'Members@odata.count': 1,
-            'Members': [{ '@odata.id': '/redfish/v1/Managers/1/VirtualMedia/CD', 'MediaTypes': ['CD'] }]
+            'Members': [{ '@odata.id': '/redfish/v1/Managers/1/VirtualMedia/Cd', 'MediaTypes': ['CD'] }]
         })
 
-    @app.route('/redfish/v1/Managers/1/VirtualMedia/CD', methods=['GET'])
+    @app.route('/redfish/v1/Managers/1/VirtualMedia/Cd', methods=['GET'])
     def redfish_virtual_media_cd():
         try:
             client = create_client()
@@ -299,9 +299,9 @@ def create_flask_app(global_config, vm_config):
             inserted = cdrom.state == 'CONNECTED'
             return jsonify({
                 '@odata.context': '/redfish/v1/$metadata#VirtualMedia.VirtualMedia',
-                '@odata.id': '/redfish/v1/Managers/1/VirtualMedia/CD',
+                '@odata.id': '/redfish/v1/Managers/1/VirtualMedia/Cd',
                 '@odata.type': '#VirtualMedia.v1_2_0.VirtualMedia',
-                'Id': 'CD',
+                'Id': 'Cd',
                 'Name': 'CD Drive',
                 'MediaTypes': ['CD'],
                 'Image': iso_path,
@@ -309,17 +309,17 @@ def create_flask_app(global_config, vm_config):
                 'WriteProtected': True,
                 'Actions': {
                     '#VirtualMedia.InsertMedia': {
-                        'target': '/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.InsertMedia'
+                        'target': '/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.InsertMedia'
                     },
                     '#VirtualMedia.EjectMedia': {
-                        'target': '/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.EjectMedia'
+                        'target': '/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.EjectMedia'
                     }
                 }
             })
         except Exception as e:
             return jsonify({ 'error': { 'code': 'Base.1.0.GeneralError', 'message': str(e) } }), 500
 
-    @app.route('/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.InsertMedia', methods=['POST'])
+    @app.route('/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.InsertMedia', methods=['POST'])
     def redfish_insert_media():
         try:
             data = request.get_json()
@@ -349,7 +349,7 @@ def create_flask_app(global_config, vm_config):
         except Exception as e:
             return jsonify({ 'error': { 'code': 'Base.1.0.GeneralError', 'message': str(e) } }), 500
 
-    @app.route('/redfish/v1/Managers/1/VirtualMedia/CD/Actions/VirtualMedia.EjectMedia', methods=['POST'])
+    @app.route('/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.EjectMedia', methods=['POST'])
     def redfish_eject_media():
         try:
             client = create_client()
